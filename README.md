@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icons/icon128.png" width="96" height="96" alt="Ícono de Chrome Audio Compressor" />
+</p>
+
 # 🎚️ Chrome Audio Compressor
 
 Extensión de Chrome (Manifest V3) que captura el audio de la pestaña activa y lo procesa **en tiempo real** con la Web Audio API: boost de volumen, reducción de ruido, ecualizador de 3 bandas, compresor nivelador de dinámica y paneo estéreo.
@@ -47,12 +51,26 @@ El boost de volumen va **antes** del compresor a propósito: si el usuario lo su
 
 ## 📂 Estructura del proyecto
 
-| Archivo           | Rol                                                              |
-|--------------------|-------------------------------------------------------------------|
-| `manifest.json`    | Configuración de la extensión (Manifest V3) y permisos.          |
-| `background.js`    | Service worker: gestiona el ciclo de vida de la captura.         |
-| `offscreen.html/js`| Documento offscreen donde vive el `AudioContext` y la cadena DSP.|
-| `popup.html/css/js`| Interfaz de usuario y controles (sliders).                       |
+| Archivo             | Rol                                                                |
+|----------------------|---------------------------------------------------------------------|
+| `manifest.json`      | Configuración de la extensión (Manifest V3) y permisos.            |
+| `background.js`      | Service worker: gestiona el ciclo de vida de la captura.           |
+| `offscreen.html/js`  | Documento offscreen donde vive el `AudioContext` y la cadena DSP.  |
+| `popup.html/css/js`  | Interfaz de usuario y controles (sliders).                         |
+| `icons/`             | Ícono de la extensión (PNG en 16/32/48/128px + fuente vectorial `.svg`). |
+| `scripts/generate_icon.py` | Script que genera el ícono a partir del SVG (ver abajo).      |
+
+## 🎨 Ícono
+
+El ícono es una pieza vectorial generada por código (no una foto ni un dibujo a mano): dos puños empujando un espectro de audio que se angosta justo donde se encuentran, con una paleta que no repite colores entre las manos (naranja/azul) y el espectro (magenta/verde lima).
+
+[`scripts/generate_icon.py`](scripts/generate_icon.py) regenera la fuente vectorial ([`icons/icon.svg`](icons/icon.svg)) — útil para ajustar colores, tamaños o la curva del espectro sin editar SVG a mano:
+
+```bash
+python scripts/generate_icon.py
+```
+
+Los PNG (`icon16/32/48/128.png`) se rasterizan a partir de ese SVG (por ejemplo abriéndolo en el navegador y exportando, o con Chrome headless `--screenshot`).
 
 ## 🚀 Instalación (modo desarrollador)
 
@@ -72,7 +90,6 @@ El boost de volumen va **antes** del compresor a propósito: si el usuario lo su
 
 - [ ] Publicar en la Chrome Web Store.
 - [ ] Presets rápidos (voz, música, podcast).
-- [ ] Ícono e identidad visual propios.
 
 ## 📄 Licencia
 
