@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Audio Enhancer</title>
+<link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎚️ Audio Enhancer</h1>
+    </header>
+
+    <button id="toggleBtn" class="toggle-btn">Activar en esta pestaña</button>
+    <p id="status" class="status">Inactivo</p>
+
+    <div id="controls" class="controls hidden">
+
+      <section class="group">
+        <h2>Compresor <span class="hint">(nivelador de volumen)</span></h2>
+        <label>
+          <span class="row"><span>Umbral</span><b id="thresholdVal">-30 dB</b></span>
+          <input type="range" id="threshold" min="-60" max="0" step="1" value="-30" />
+        </label>
+        <label>
+          <span class="row"><span>Compresión (Ratio)</span><b id="ratioVal">8:1</b></span>
+          <input type="range" id="ratio" min="1" max="20" step="1" value="8" />
+        </label>
+        <label>
+          <span class="row"><span>Ganancia de compensación</span><b id="makeupVal">1.4x</b></span>
+          <input type="range" id="makeup" min="1" max="4" step="0.1" value="1.4" />
+        </label>
+      </section>
+
+      <section class="group">
+        <h2>Ecualizador</h2>
+        <label>
+          <span class="row"><span>Bajos</span><b id="eqLowVal">0 dB</b></span>
+          <input type="range" id="eqLow" min="-15" max="15" step="1" value="0" />
+        </label>
+        <label>
+          <span class="row"><span>Medios</span><b id="eqMidVal">0 dB</b></span>
+          <input type="range" id="eqMid" min="-15" max="15" step="1" value="0" />
+        </label>
+        <label>
+          <span class="row"><span>Agudos</span><b id="eqHighVal">0 dB</b></span>
+          <input type="range" id="eqHigh" min="-15" max="15" step="1" value="0" />
+        </label>
+      </section>
+
+      <section class="group">
+        <h2>Reducción de Ruido</h2>
+        <label>
+          <span class="row"><span>Intensidad</span><b id="noiseVal">0%</b></span>
+          <input type="range" id="noise" min="0" max="100" step="1" value="0" />
+        </label>
+      </section>
+
+      <section class="group">
+        <h2>Paneo</h2>
+        <label>
+          <span class="row"><span>Izquierda / Derecha</span><b id="panVal">Centro</b></span>
+          <input type="range" id="pan" min="-1" max="1" step="0.05" value="0" />
+        </label>
+      </section>
+
+      <button id="resetBtn" class="reset-btn">Restablecer valores</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
