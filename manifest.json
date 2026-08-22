@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Chrome Audio Compressor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Mejora el audio de la pestaña activa en tiempo real: reducción de ruido, ecualizador de 3 bandas, compresor nivelador de dinámica y paneo estéreo.",
   "permissions": ["tabCapture", "offscreen", "storage"],
   "background": {

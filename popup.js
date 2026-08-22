@@ -2,6 +2,7 @@
 // los valores de los sliders directamente al documento offscreen en tiempo real.
 
 const DEFAULTS = {
+  volumeBoost: 1,
   threshold: -30,
   ratio: 8,
   knee: 30,
@@ -20,6 +21,8 @@ const els = {
   toggleBtn: document.getElementById('toggleBtn'),
   status: document.getElementById('status'),
   controls: document.getElementById('controls'),
+  volume: document.getElementById('volume'),
+  volumeVal: document.getElementById('volumeVal'),
   threshold: document.getElementById('threshold'),
   thresholdVal: document.getElementById('thresholdVal'),
   ratio: document.getElementById('ratio'),
@@ -60,6 +63,8 @@ async function saveSettings(settings) {
 }
 
 function applySettingsToUI(settings) {
+  els.volume.value = settings.volumeBoost;
+  els.volumeVal.textContent = `${Math.round(settings.volumeBoost * 100)}%`;
   els.threshold.value = settings.threshold;
   els.thresholdVal.textContent = `${settings.threshold} dB`;
   els.ratio.value = settings.ratio;
@@ -80,6 +85,7 @@ function applySettingsToUI(settings) {
 
 function settingsToParams(settings) {
   return {
+    volumeBoost: settings.volumeBoost,
     threshold: settings.threshold,
     ratio: settings.ratio,
     knee: settings.knee,
@@ -169,6 +175,7 @@ els.toggleBtn.addEventListener('click', async () => {
   }
 });
 
+bindSlider(els.volume, els.volumeVal, 'volumeBoost', 'volumeBoost', (v) => `${Math.round(v * 100)}%`);
 bindSlider(els.threshold, els.thresholdVal, 'threshold', 'threshold', (v) => `${v} dB`);
 bindSlider(els.ratio, els.ratioVal, 'ratio', 'ratio', (v) => `${v}:1`);
 bindSlider(els.makeup, els.makeupVal, 'makeup', 'makeupGain', (v) => `${v.toFixed(1)}x`);

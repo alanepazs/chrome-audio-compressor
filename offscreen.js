@@ -1,7 +1,7 @@
 // offscreen.js — aquí vive el AudioContext real.
 //
 // Cadena de nodos por pestaña:
-//   MediaStreamSource -> NoiseFilter(lowpass) -> EQ(low/mid/high) -> Compressor
+//   MediaStreamSource -> VolumeBoost -> NoiseFilter(lowpass) -> EQ(low/mid/high) -> Compressor
 //     -> MakeupGain -> StereoPanner -> destination
 //
 // Se admite más de una pestaña activa simultáneamente (Map por tabId),
@@ -12,6 +12,12 @@ const sessions = new Map(); // tabId -> { stream, audioContext, source, nodes }
 function buildGraph(stream) {
   const audioContext = new AudioContext();
   const source = audioContext.createMediaStreamSource(stream);
+
+  // 0) Boost de volumen: amplifica la señal original por encima del 100% (hasta 400%).
+  //    Va primero en la cadena para que el Compresor actúe como colchón y evite
+  //    distorsión/clipping cuando se sube mucho.
+  const volumeBoost = audioContext.createGain();
+  volumeBoost.gain.value = 1; // 1 = 100% = volumen original, sin cambios
 
   // 1) Reducción de ruido: filtro pasa-bajos que atenúa soplidos / ruido blanco de alta frecuencia.
   const noiseFilter = audioContext.createBiquadFilter();
@@ -52,7 +58,8 @@ function buildGraph(stream) {
   const panner = audioContext.createStereoPanner();
   panner.pan.value = 0;
 
-  source.connect(noiseFilter);
+  source.connect(volumeBoost);
+  volumeBoost.connect(noiseFilter);
   noiseFilter.connect(eqLow);
   eqLow.connect(eqMid);
   eqMid.connect(eqHigh);
@@ -64,7 +71,7 @@ function buildGraph(stream) {
   return {
     audioContext,
     source,
-    nodes: { noiseFilter, eqLow, eqMid, eqHigh, compressor, makeupGain, panner }
+    nodes: { volumeBoost, noiseFilter, eqLow, eqMid, eqHigh, compressor, makeupGain, panner }
   };
 }
 
@@ -116,10 +123,13 @@ function updateParams(tabId, params) {
   const session = sessions.get(tabId);
   if (!session) return;
 
-  const { noiseFilter, eqLow, eqMid, eqHigh, compressor, makeupGain, panner } = session.nodes;
+  const { volumeBoost, noiseFilter, eqLow, eqMid, eqHigh, compressor, makeupGain, panner } = session.nodes;
   const now = session.audioContext.currentTime;
   const smoothing = 0.01; // evita clics al mover los sliders
 
+  if (params.volumeBoost !== undefined) {
+    volumeBoost.gain.setTargetAtTime(params.volumeBoost, now, smoothing);
+  }
   if (params.noiseReduction !== undefined) {
     noiseFilter.frequency.setTargetAtTime(noiseAmountToFrequency(params.noiseReduction), now, smoothing);
   }
