@@ -2,7 +2,11 @@
 //
 // Cadena de nodos por pestaña:
 //   MediaStreamSource -> VolumeBoost -> NoiseFilter(lowpass) -> EQ(low/mid/high) -> Compressor
-//     -> MakeupGain -> StereoPanner -> destination
+//     -> MakeupGain -> StereoPanner -> [Dry/Mono mix] -> OutputGain (volumen fino) -> destination
+//
+// El bloque Dry/Mono mantiene dos caminos en paralelo (estéreo original y una
+// mezcla mono de L+R) y cruza entre ellos con dos ganancias (dryGain/monoWetGain)
+// para poder activar/desactivar "Mono" sin clics.
 //
 // Se admite más de una pestaña activa simultáneamente (Map por tabId),
 // aunque la UI del popup solo controla la pestaña actualmente enfocada.
@@ -58,6 +62,29 @@ function buildGraph(stream) {
   const panner = audioContext.createStereoPanner();
   panner.pan.value = 0;
 
+  // 5) Mono: downmix L+R a un solo canal, duplicado en ambos parlantes.
+  //    Se mezcla en paralelo con la señal estéreo original (dryGain) y se
+  //    cruza entre ambas con dryGain/monoWetGain para activar/desactivar sin clics.
+  const splitter = audioContext.createChannelSplitter(2);
+  const monoSumL = audioContext.createGain();
+  monoSumL.gain.value = 0.5;
+  const monoSumR = audioContext.createGain();
+  monoSumR.gain.value = 0.5;
+  const monoSum = audioContext.createGain();
+  const monoMerger = audioContext.createChannelMerger(2);
+  const monoWetGain = audioContext.createGain();
+  monoWetGain.gain.value = 0; // 0 = mono desactivado (pasa la señal dry)
+
+  const dryGain = audioContext.createGain();
+  dryGain.gain.value = 1; // 1 = estéreo original (mono desactivado)
+
+  const mixOut = audioContext.createGain(); // suma dry + mono
+
+  // 6) Volumen fino de salida: atenúa por debajo del mínimo que permite el
+  //    reproductor de turno, sin llegar nunca a silencio total (mínimo 1%).
+  const outputGain = audioContext.createGain();
+  outputGain.gain.value = 1;
+
   source.connect(volumeBoost);
   volumeBoost.connect(noiseFilter);
   noiseFilter.connect(eqLow);
@@ -66,12 +93,29 @@ function buildGraph(stream) {
   eqHigh.connect(compressor);
   compressor.connect(makeupGain);
   makeupGain.connect(panner);
-  panner.connect(audioContext.destination);
+
+  panner.connect(dryGain);
+  panner.connect(splitter);
+  splitter.connect(monoSumL, 0);
+  splitter.connect(monoSumR, 1);
+  monoSumL.connect(monoSum);
+  monoSumR.connect(monoSum);
+  monoSum.connect(monoMerger, 0, 0);
+  monoSum.connect(monoMerger, 0, 1);
+  monoMerger.connect(monoWetGain);
+
+  dryGain.connect(mixOut);
+  monoWetGain.connect(mixOut);
+  mixOut.connect(outputGain);
+  outputGain.connect(audioContext.destination);
 
   return {
     audioContext,
     source,
-    nodes: { volumeBoost, noiseFilter, eqLow, eqMid, eqHigh, compressor, makeupGain, panner }
+    nodes: {
+      volumeBoost, noiseFilter, eqLow, eqMid, eqHigh, compressor, makeupGain, panner,
+      dryGain, monoWetGain, outputGain
+    }
   };
 }
 
@@ -123,7 +167,10 @@ function updateParams(tabId, params) {
   const session = sessions.get(tabId);
   if (!session) return;
 
-  const { volumeBoost, noiseFilter, eqLow, eqMid, eqHigh, compressor, makeupGain, panner } = session.nodes;
+  const {
+    volumeBoost, noiseFilter, eqLow, eqMid, eqHigh, compressor, makeupGain, panner,
+    dryGain, monoWetGain, outputGain
+  } = session.nodes;
   const now = session.audioContext.currentTime;
   const smoothing = 0.01; // evita clics al mover los sliders
 
@@ -141,6 +188,13 @@ function updateParams(tabId, params) {
   if (params.knee !== undefined) compressor.knee.setTargetAtTime(params.knee, now, smoothing);
   if (params.makeupGain !== undefined) makeupGain.gain.setTargetAtTime(params.makeupGain, now, smoothing);
   if (params.pan !== undefined) panner.pan.setTargetAtTime(params.pan, now, smoothing);
+  if (params.mono !== undefined) {
+    dryGain.gain.setTargetAtTime(params.mono ? 0 : 1, now, smoothing);
+    monoWetGain.gain.setTargetAtTime(params.mono ? 1 : 0, now, smoothing);
+  }
+  if (params.outputGain !== undefined) {
+    outputGain.gain.setTargetAtTime(params.outputGain, now, smoothing);
+  }
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

@@ -17,11 +17,16 @@
     <div id="controls" class="controls hidden">
 
       <section class="group">
-        <h2>Volumen <span class="hint">(boost sobre el original)</span></h2>
+        <h2>Volumen <span class="hint">(boost y atenuación)</span></h2>
         <label>
           <span class="row"><span>Aumento</span><b id="volumeVal">100%</b></span>
           <input type="range" id="volume" min="1" max="4" step="0.05" value="1" />
         </label>
+        <label>
+          <span class="row"><span>Volumen fino <span class="hint">(sin llegar a cero)</span></span><b id="outputVal">100%</b></span>
+          <input type="range" id="output" min="1" max="100" step="1" value="100" />
+        </label>
+        <button id="monoBtn" class="mono-btn" type="button">Mono: Desactivado</button>
       </section>
 
       <section class="group">

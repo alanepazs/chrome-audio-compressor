@@ -122,6 +122,29 @@ input[type="range"] {
   accent-color: var(--accent2);
 }
 
+.mono-btn {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mono-btn:hover {
+  border-color: var(--accent2);
+}
+
+.mono-btn.active {
+  background: var(--accent2);
+  color: #04263f;
+  border-color: var(--accent2);
+}
+
 .reset-btn {
   width: 100%;
   padding: 8px;

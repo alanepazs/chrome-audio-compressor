@@ -11,7 +11,9 @@ const DEFAULTS = {
   eqMid: 0,
   eqHigh: 0,
   noise: 0,
-  pan: 0
+  pan: 0,
+  output: 100,
+  mono: false
 };
 
 let currentTabId = null;
@@ -39,6 +41,9 @@ const els = {
   noiseVal: document.getElementById('noiseVal'),
   pan: document.getElementById('pan'),
   panVal: document.getElementById('panVal'),
+  output: document.getElementById('output'),
+  outputVal: document.getElementById('outputVal'),
+  monoBtn: document.getElementById('monoBtn'),
   resetBtn: document.getElementById('resetBtn')
 };
 
@@ -81,6 +86,10 @@ function applySettingsToUI(settings) {
   els.noiseVal.textContent = `${settings.noise}%`;
   els.pan.value = settings.pan;
   els.panVal.textContent = fmtPan(settings.pan);
+  els.output.value = settings.output;
+  els.outputVal.textContent = `${settings.output}%`;
+  els.monoBtn.textContent = `Mono: ${settings.mono ? 'Activado' : 'Desactivado'}`;
+  els.monoBtn.classList.toggle('active', settings.mono);
 }
 
 function settingsToParams(settings) {
@@ -94,7 +103,9 @@ function settingsToParams(settings) {
     eqMid: settings.eqMid,
     eqHigh: settings.eqHigh,
     noiseReduction: settings.noise,
-    pan: settings.pan
+    pan: settings.pan,
+    outputGain: settings.output / 100,
+    mono: settings.mono
   };
 }
 
@@ -184,6 +195,24 @@ bindSlider(els.eqMid, els.eqMidVal, 'eqMid', 'eqMid', (v) => `${v} dB`);
 bindSlider(els.eqHigh, els.eqHighVal, 'eqHigh', 'eqHigh', (v) => `${v} dB`);
 bindSlider(els.noise, els.noiseVal, 'noise', 'noiseReduction', (v) => `${v}%`);
 bindSlider(els.pan, els.panVal, 'pan', 'pan', (v) => fmtPan(v));
+
+els.output.addEventListener('input', async () => {
+  const raw = parseInt(els.output.value, 10); // 1-100
+  els.outputVal.textContent = `${raw}%`;
+  const settings = await loadSettings();
+  settings.output = raw;
+  await saveSettings(settings);
+  sendParamsUpdate({ outputGain: raw / 100 });
+});
+
+els.monoBtn.addEventListener('click', async () => {
+  const settings = await loadSettings();
+  settings.mono = !settings.mono;
+  await saveSettings(settings);
+  els.monoBtn.textContent = `Mono: ${settings.mono ? 'Activado' : 'Desactivado'}`;
+  els.monoBtn.classList.toggle('active', settings.mono);
+  sendParamsUpdate({ mono: settings.mono });
+});
 
 els.resetBtn.addEventListener('click', async () => {
   await saveSettings({ ...DEFAULTS });
